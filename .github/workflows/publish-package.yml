@@ -29,6 +29,8 @@ jobs:
     permissions:
       contents: write
       packages: write
+      pull-requests: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +44,7 @@ jobs:
       - name: Semantic Version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
 #
 #      - name: Publish
