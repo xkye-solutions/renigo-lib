@@ -1,5 +1,3 @@
-*.yml
-*.yaml
 *.min.js
 **/.git
 **/.svn

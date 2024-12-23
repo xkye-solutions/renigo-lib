@@ -23,10 +23,17 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           registry-url: https://npm.pkg.github.com/
+
       - run: npm ci
-      - run: npm publish
+
+      - name: Build Package
+        run: npm run build
+
+      - name: Publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

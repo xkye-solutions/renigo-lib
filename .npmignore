@@ -1,2 +1,8 @@
 tsconfig.json
 src
+tsconfig.tsbuildinfo
+.github
+node_modules
+.prettierignore
+.prettierrc
+eslint.config.js
