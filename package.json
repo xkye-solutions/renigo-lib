@@ -1,0 +1,42 @@
+{
+  "name": "@xkye-solutions/renigo-lib",
+  "version": "0.1.0",
+  "description": "Renigo Library",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prettier": "pprettier --check \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
+    "prettier:fix": "pprettier --write \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "renigo",
+    "nodejs",
+    "next",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@mixer/parallel-prettier": "^2.0.3",
+    "@types/node": "^22.10.2",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.2",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "supabase": "^2.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.47.10",
+    "next": "^15.1.2"
+  }
+}
