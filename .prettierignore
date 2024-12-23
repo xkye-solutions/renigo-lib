@@ -1,0 +1,7 @@
+*.yml
+*.yaml
+*.min.js
+**/.git
+**/.svn
+**/.hg
+**/node_modules

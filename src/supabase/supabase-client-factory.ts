@@ -10,21 +10,21 @@ export class SupabaseClientFactory {
   static createBrowserClient() {
     return supabaseCreateBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
     );
   }
 
   static async createAdminClient() {
     return createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.SUPABASE_SERVICE_ROLE as string
+      process.env.SUPABASE_SERVICE_ROLE as string,
     );
   }
 
   static async createAnonClient() {
     return createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
     );
   }
 
@@ -42,18 +42,18 @@ export class SupabaseClientFactory {
             return cookieStore.getAll();
           },
           setAll(
-            cookies: { name: string; value: string; options: CookieOptions }[]
+            cookies: { name: string; value: string; options: CookieOptions }[],
           ) {
             try {
               cookies.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
+                cookieStore.set(name, value, options),
               );
             } catch (error) {
               console.error('Failed to set cookies', error);
             }
           },
         },
-      }
+      },
     );
   }
 }

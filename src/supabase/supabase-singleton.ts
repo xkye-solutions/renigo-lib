@@ -5,7 +5,7 @@ export class SupabaseSingleton {
   private static instance: SupabaseClient;
 
   // @deprecated: Will remove this in future release
-  static getBrowserInstance (): SupabaseClient {
+  static getBrowserInstance(): SupabaseClient {
     if (!SupabaseSingleton.instance) {
       SupabaseSingleton.instance = SupabaseClientFactory.createBrowserClient();
     }
@@ -13,15 +13,15 @@ export class SupabaseSingleton {
     return SupabaseSingleton.instance;
   }
 
-  static async getServerInstance (): Promise<SupabaseClient> {
+  static async getServerInstance(): Promise<SupabaseClient> {
     return await SupabaseClientFactory.createServerClient();
   }
 
-  static async getAnonInstance (): Promise<SupabaseClient> {
+  static async getAnonInstance(): Promise<SupabaseClient> {
     return await SupabaseClientFactory.createAnonClient();
   }
 
-  static async getAdminInstance (): Promise<SupabaseClient> {
+  static async getAdminInstance(): Promise<SupabaseClient> {
     return await SupabaseClientFactory.createAdminClient();
   }
 }

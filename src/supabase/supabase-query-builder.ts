@@ -19,7 +19,7 @@ export class SupabaseQueryBuilder<
 
   static async getInstance() {
     return new SupabaseQueryBuilder(
-      await SupabaseSingleton.getServerInstance()
+      await SupabaseSingleton.getServerInstance(),
     );
   }
 
