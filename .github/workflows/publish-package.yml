@@ -5,7 +5,7 @@ name: Renigo Library Package
 
 on:
   release:
-    types: [created]
+    types: [ created ]
   push:
     branches:
       - main
@@ -34,7 +34,9 @@ jobs:
       - run: npm ci
 
       - name: Semantic Version
-        run: npx semantic-release@19
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
 
       - name: Build Package
         run: npm run build
@@ -42,4 +44,4 @@ jobs:
       - name: Publish
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
