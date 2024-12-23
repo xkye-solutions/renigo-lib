@@ -4,7 +4,6 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -21,8 +20,9 @@
       "@/*": ["./src/*"]
     },
     "target": "ES2017",
-    "declaration": true
+    "declaration": true,
+    "outDir": "./dist"
   },
-  "include": ["src/**/**/*"],
+  "include": ["src/**/**/*.ts"],
   "exclude": ["node_modules"]
 }
