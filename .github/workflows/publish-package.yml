@@ -30,6 +30,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npm audit signatures
+
       - name: Build
         run: npm run build
 
