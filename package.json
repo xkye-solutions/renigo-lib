@@ -49,6 +49,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:xkye-solutions/renigo-lib.git"
+    "url": "git+ssh://git@github.com/xkye-solutions/renigo-lib.git"
   }
 }
