@@ -47,9 +47,8 @@
       "develop"
     ]
   },
-  "repositoryUrl": "git@github.com:xkye-solutions/renigo-lib.git",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xkye-solutions/renigo-lib.git"
+    "url": "git@github.com:xkye-solutions/renigo-lib.git"
   }
 }
