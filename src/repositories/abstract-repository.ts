@@ -33,12 +33,16 @@ export abstract class AbstractRepository<
 
   protected TABLE_NAME: string = '';
 
+  protected SCHEMA_NAME: string = 'public';
+
   constructor(client: SupabaseClient) {
     this.client = client;
   }
 
   get queryBuilder(): PostgrestQueryBuilder<Schema, Relation> {
-    return this.client.from<string, Relation>(this.TABLE_NAME);
+    return this.client
+      .schema<string>(this.SCHEMA_NAME)
+      .from<string, Relation>(this.TABLE_NAME);
   }
 
   set pageSize(value: number) {
@@ -48,7 +52,7 @@ export abstract class AbstractRepository<
   public async all(options?: {
     ascending?: boolean;
     nullsFirst?: boolean;
-    referencedTable?: undefined;
+    referencedTable?: string;
     page?: number;
     select?: string;
     queryBuilder?: (

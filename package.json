@@ -11,8 +11,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "prettier": "pprettier --check \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
-    "prettier:fix": "pprettier --write \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
+    "prettier": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
+    "prettier:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -25,7 +25,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@mixer/parallel-prettier": "^2.0.3",
+    "@eslint/eslintrc": "^3.2.0",
     "@types/node": "^22.10.2",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.1.2",
