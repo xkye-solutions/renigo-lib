@@ -4,6 +4,10 @@ export function errorMessageResolver(
   defaultMessage?: string,
 ): string {
   if ('message' in error) {
+    if (error.message === '' || error.message === '{}') {
+      return defaultMessage ?? 'An error occurred. Please try again later.';
+    }
+
     return error.message;
   }
 

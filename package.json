@@ -14,7 +14,8 @@
     "prettier": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
     "prettier:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "fix": "npm run lint:fix && npm run prettier:fix"
   },
   "keywords": [
     "renigo",
