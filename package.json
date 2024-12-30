@@ -21,6 +21,9 @@
     "next",
     "typescript"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
