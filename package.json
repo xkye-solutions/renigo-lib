@@ -5,9 +5,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
@@ -15,7 +12,8 @@
     "prettier:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,sql}\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "fix": "npm run lint:fix && npm run prettier:fix"
+    "fix": "npm run lint:fix && npm run prettier:fix",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "renigo",
