@@ -40,12 +40,6 @@
     "@supabase/supabase-js": "^2.47.10",
     "next": "^15.1.2"
   },
-  "release": {
-    "branches": [
-      "main",
-      "develop"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/xkye-solutions/renigo-lib.git"
