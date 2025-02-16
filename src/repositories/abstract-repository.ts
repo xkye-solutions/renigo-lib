@@ -7,7 +7,6 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import {
   GenericSchema,
   GenericTable,
-  GenericView,
 } from '@supabase/supabase-js/src/lib/types';
 
 export interface PaginationRange {
@@ -24,7 +23,7 @@ export interface AllResponse<T> {
 
 export abstract class AbstractRepository<
   Schema extends GenericSchema,
-  Relation extends GenericTable | GenericView,
+  Relation extends GenericTable,
   Entity = Relation['Row'],
 > {
   protected defaultPageSize = 15;
@@ -34,6 +33,10 @@ export abstract class AbstractRepository<
   protected TABLE_NAME: string = '';
 
   protected SCHEMA_NAME: string = 'public';
+
+  protected CREATED_AT: string = 'created_at';
+
+  protected UPDATED_AT: string = 'updated_at';
 
   constructor(client: SupabaseClient) {
     this.client = client;
@@ -79,7 +82,7 @@ export abstract class AbstractRepository<
     const builder = options?.queryBuilder
       ? options.queryBuilder(initialBuilder).range(from, to)
       : initialBuilder
-          .order('created_at', {
+          .order(this.CREATED_AT, {
             ...options,
             ascending: options?.ascending ?? false,
           })
@@ -103,7 +106,7 @@ export abstract class AbstractRepository<
     };
   }
 
-  async find(
+  public async find(
     id: string,
     options?: {
       select?: string;
@@ -122,11 +125,14 @@ export abstract class AbstractRepository<
     return data;
   }
 
-  // @todo: Add the correct type
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async create(data: any): Promise<Entity> {
+  public async create(data: Relation['Insert']): Promise<Entity> {
     const { data: created, error } = await this.queryBuilder
-      .insert(data)
+      .insert({
+        ...data,
+        [this.CREATED_AT]: new Date().toISOString(),
+        [this.UPDATED_AT]: new Date().toISOString(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
       .select()
       .single();
 
@@ -135,6 +141,31 @@ export abstract class AbstractRepository<
     }
 
     return created as Entity;
+  }
+
+  public async update(
+    id: string,
+    data: Relation['Update'],
+    options?: {
+      select?: string;
+      column?: string;
+    },
+  ): Promise<Entity> {
+    const { data: updated, error } = await this.queryBuilder
+      .update({
+        ...data,
+        [this.UPDATED_AT]: new Date().toISOString(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
+      .eq(options?.column ?? 'id', id)
+      .select(options?.select ?? '*')
+      .single<Entity>();
+
+    if (error) {
+      throw error;
+    }
+
+    return updated as Entity;
   }
 
   // @todo: Create a Paginator class to handle pagination
