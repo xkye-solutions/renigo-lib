@@ -254,7 +254,9 @@ export abstract class AbstractRepository<
   private getColumnFromMethod(methodName: string, prefix: string): string {
     return methodName
       .replace(prefix, '')
-      .replace(/([A-Z])/g, '_$1') // Convert camelCase to snake_case (if needed)
+      .replace(/([A-Z])/g, (_: string, p1: string, offset: number) =>
+        offset ? '_' + p1 : p1,
+      )
       .toLowerCase();
   }
 
