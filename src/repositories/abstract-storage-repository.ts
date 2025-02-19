@@ -6,22 +6,26 @@ export abstract class AbstractStorageRepository {
 
   protected readonly client: StorageClient;
 
-  protected readonly supabase: SupabaseClient;
-
-  constructor(supabase: SupabaseClient) {
-    this.supabase = supabase;
+  constructor(protected readonly supabase: SupabaseClient) {
     this.client = supabase.storage;
   }
 
-  get api() {
+  public get api() {
     if (this.BUCKET_NAME === '' || !this.BUCKET_NAME) {
-      throw new Error('Bucket name must be defined');
+      throw new Error('BUCKET_NAME must be defined');
     }
 
     return this.client.from(this.BUCKET_NAME);
   }
 
-  getPublicUrl(path: string, options?: { transform?: TransformOptions }) {
+  public getPublicUrl(
+    path: string,
+    options?: { transform?: TransformOptions },
+  ) {
+    if (/^[a-zA-Z]+:\/\//.test(path)) {
+      return path;
+    }
+
     const {
       data: { publicUrl },
     } = this.api.getPublicUrl(path, options);
@@ -29,14 +33,15 @@ export abstract class AbstractStorageRepository {
     return publicUrl;
   }
 
-  async upload(file: File, filename?: string) {
-    const { data, error } = await this.api.upload(
-      `${filename ?? Date.now()}`,
-      file,
-    );
+  public async upload(
+    file: File,
+    filename?: string,
+  ): Promise<{ id: string; path: string; fullPath: string }> {
+    const uniqueFilename = filename ?? crypto.randomUUID();
+    const { data, error } = await this.api.upload(uniqueFilename, file);
 
     if (error) {
-      throw error;
+      throw new Error(`Upload failed: ${error.message}`, { cause: error });
     }
 
     return data;

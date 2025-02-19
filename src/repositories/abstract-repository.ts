@@ -28,8 +28,6 @@ export abstract class AbstractRepository<
 > {
   protected defaultPageSize = 15;
 
-  protected readonly client: SupabaseClient;
-
   protected TABLE_NAME: string = '';
 
   protected SCHEMA_NAME: string = 'public';
@@ -38,17 +36,56 @@ export abstract class AbstractRepository<
 
   protected UPDATED_AT: string = 'updated_at';
 
-  constructor(client: SupabaseClient) {
-    this.client = client;
+  protected DELETED_AT: string = 'deleted_at';
+
+  protected readonly hasSoftDelete = true;
+
+  constructor(protected readonly client: SupabaseClient) {
+    return new Proxy(this, {
+      get: (target, prop, options) => {
+        const methodName = prop.toString();
+
+        if (methodName.startsWith('findBy')) {
+          const column = this.getColumnFromMethod(methodName, 'findBy');
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return (value: any) => this.findByColumn(column, value, options);
+        }
+
+        if (methodName.startsWith('findOneBy')) {
+          const column = this.getColumnFromMethod(methodName, 'findOneBy');
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return (value: any) => this.findOneByColumn(column, value, options);
+        }
+
+        if (methodName.startsWith('countBy')) {
+          const column = this.getColumnFromMethod(methodName, 'countBy');
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return (value: any) => this.countByColumn(column, value);
+        }
+
+        return target[methodName as keyof typeof target];
+      },
+    });
   }
 
-  get queryBuilder(): PostgrestQueryBuilder<Schema, Relation> {
+  public get queryBuilder(): PostgrestQueryBuilder<Schema, Relation> {
+    if (this.TABLE_NAME === '' || !this.TABLE_NAME) {
+      throw new Error('Table name must be defined');
+    }
+
     return this.client
       .schema<string>(this.SCHEMA_NAME)
       .from<string, Relation>(this.TABLE_NAME);
   }
 
-  set pageSize(value: number) {
+  public set pageSize(value: number) {
+    if (value <= 0) {
+      throw new Error('Page size must be greater than zero');
+    }
+
     this.defaultPageSize = value;
   }
 
@@ -58,6 +95,7 @@ export abstract class AbstractRepository<
     referencedTable?: string;
     page?: number;
     select?: string;
+    includeDeleted?: boolean;
     queryBuilder?: (
       builder: PostgrestFilterBuilder<
         Schema,
@@ -75,9 +113,12 @@ export abstract class AbstractRepository<
   }): Promise<AllResponse<Entity>> {
     const { from, to } = this.getPaginationRange(options?.page);
 
-    const initialBuilder = this.queryBuilder.select(options?.select ?? '*', {
+    let initialBuilder = this.queryBuilder.select(options?.select ?? '*', {
       count: 'exact',
     });
+    if (this.hasSoftDelete && !options?.includeDeleted) {
+      initialBuilder = initialBuilder.is(this.DELETED_AT, null);
+    }
 
     const builder = options?.queryBuilder
       ? options.queryBuilder(initialBuilder).range(from, to)
@@ -126,15 +167,16 @@ export abstract class AbstractRepository<
   }
 
   public async create(data: Relation['Insert']): Promise<Entity> {
+    const timestamp = new Date().toISOString();
     const { data: created, error } = await this.queryBuilder
       .insert({
         ...data,
-        [this.CREATED_AT]: new Date().toISOString(),
-        [this.UPDATED_AT]: new Date().toISOString(),
+        [this.CREATED_AT]: timestamp,
+        [this.UPDATED_AT]: timestamp,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any)
       .select()
-      .single();
+      .single<Entity>();
 
     if (error) {
       throw error;
@@ -168,6 +210,32 @@ export abstract class AbstractRepository<
     return updated as Entity;
   }
 
+  public async delete(
+    id: string,
+    options?: { column?: string },
+  ): Promise<boolean> {
+    const timestamp = new Date().toISOString();
+    const queryBuilder = () => {
+      if (this.hasSoftDelete) {
+        return this.queryBuilder.update({
+          [this.DELETED_AT]: timestamp,
+          [this.UPDATED_AT]: timestamp,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+      }
+
+      return this.queryBuilder.delete();
+    };
+
+    const { error } = await queryBuilder().eq(options?.column ?? 'id', id);
+
+    if (error) {
+      throw new Error(`Unable to delete: ${error.message}`, { cause: error });
+    }
+
+    return true;
+  }
+
   // @todo: Create a Paginator class to handle pagination
   protected getPaginationRange(
     page: number = 1,
@@ -181,5 +249,60 @@ export abstract class AbstractRepository<
       from,
       to,
     };
+  }
+
+  private getColumnFromMethod(methodName: string, prefix: string): string {
+    return methodName
+      .replace(prefix, '')
+      .replace(/([A-Z])/g, '_$1') // Convert camelCase to snake_case (if needed)
+      .toLowerCase();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async findByColumn(
+    column: string,
+    value: any,
+    options?: { select?: string },
+  ): Promise<Entity[]> {
+    const { data, error } = await this.queryBuilder
+      .select(options?.select ?? '*')
+      .eq(column, value);
+
+    if (error) {
+      throw error;
+    }
+
+    return data as Entity[];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async findOneByColumn(
+    column: string,
+    value: any,
+    options?: { select?: string },
+  ): Promise<Entity | null> {
+    const { data, error } = await this.queryBuilder
+      .select(options?.select ?? '*')
+      .eq(column, value)
+      .maybeSingle<Entity>();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async countByColumn(column: string, value: any): Promise<number> {
+    const { count, error } = await this.queryBuilder
+      .select('*', { count: 'exact', head: true })
+      .eq(column, value);
+
+    if (error) {
+      throw error;
+    }
+
+    return count ?? 0;
   }
 }
