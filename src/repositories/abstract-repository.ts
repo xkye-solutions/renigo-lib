@@ -1,6 +1,13 @@
-import { PostgrestFilterBuilder, PostgrestQueryBuilder, PostgrestTransformBuilder } from '@supabase/postgrest-js';
+import {
+  PostgrestFilterBuilder,
+  PostgrestQueryBuilder,
+  PostgrestTransformBuilder,
+} from '@supabase/postgrest-js';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { GenericSchema, GenericTable } from '@supabase/supabase-js/src/lib/types';
+import {
+  GenericSchema,
+  GenericTable,
+} from '@supabase/supabase-js/src/lib/types';
 
 export interface PaginationRange {
   from: number;
@@ -116,11 +123,11 @@ export abstract class AbstractRepository<
     const builder = options?.queryBuilder
       ? options.queryBuilder(initialBuilder).range(from, to)
       : initialBuilder
-        .order(this.CREATED_AT, {
-          ...options,
-          ascending: options?.ascending ?? false,
-        })
-        .range(from, to);
+          .order(this.CREATED_AT, {
+            ...options,
+            ascending: options?.ascending ?? false,
+          })
+          .range(from, to);
 
     const { data, error, count } = await builder;
 
