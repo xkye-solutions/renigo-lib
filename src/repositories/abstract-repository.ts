@@ -1,78 +1,55 @@
-import {
-  PostgrestFilterBuilder,
-  PostgrestQueryBuilder,
-  PostgrestTransformBuilder,
-} from '@supabase/postgrest-js';
+import { QueryBuilder } from '@/utils';
+import { PostgrestFilterBuilder, PostgrestQueryBuilder, PostgrestTransformBuilder } from '@supabase/postgrest-js';
 import { SupabaseClient } from '@supabase/supabase-js';
-import {
-  GenericSchema,
-  GenericTable,
-} from '@supabase/supabase-js/src/lib/types';
+import { GenericSchema, GenericTable } from '@supabase/supabase-js/src/lib/types';
 
-export interface PaginationRange {
-  from: number;
-  to: number;
-}
-
-export interface AllResponse<T> {
-  data: T[];
-  count: number;
-  currentPage: number;
-  totalPages: number;
-}
-
+/**
+ * Abstract class providing a generic repository for database operations.
+ * Supports querying, inserting, updating, sof deleting, and counting records.
+ */
 export abstract class AbstractRepository<
   Schema extends GenericSchema,
   Relation extends GenericTable,
   Entity = Relation['Row'],
 > {
-  protected defaultPageSize = 15;
+  /**
+   * The name of the table (must be defined in subclasses).
+   */
+  protected abstract readonly TABLE_NAME: string;
 
-  protected TABLE_NAME: string = '';
+  /**
+   * The database schema name (default: 'public').
+   */
+  protected readonly SCHEMA_NAME: string = 'public';
 
-  protected SCHEMA_NAME: string = 'public';
+  /**
+   * The column used for tracking creation timestamps.
+   */
+  protected readonly CREATED_AT: string = 'created_at';
 
-  protected CREATED_AT: string = 'created_at';
+  /**
+   * The column used for tracking update timestamps.
+   */
+  protected readonly UPDATED_AT: string = 'updated_at';
 
-  protected UPDATED_AT: string = 'updated_at';
+  /**
+   * The column used for soft deletion.
+   */
+  protected readonly DELETED_AT: string = 'deleted_at';
 
-  protected DELETED_AT: string = 'deleted_at';
-
+  /**
+   * Determines whether soft deletion is enabled.
+   */
   protected readonly hasSoftDelete = true;
 
-  constructor(protected readonly client: SupabaseClient) {
-    return new Proxy(this, {
-      get: (target, prop, options) => {
-        const methodName = prop.toString();
+  constructor(protected readonly client: SupabaseClient) {}
 
-        if (methodName.startsWith('findBy')) {
-          const column = this.getColumnFromMethod(methodName, 'findBy');
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return (value: any) => this.findByColumn(column, value, options);
-        }
-
-        if (methodName.startsWith('findOneBy')) {
-          const column = this.getColumnFromMethod(methodName, 'findOneBy');
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return (value: any) => this.findOneByColumn(column, value, options);
-        }
-
-        if (methodName.startsWith('countBy')) {
-          const column = this.getColumnFromMethod(methodName, 'countBy');
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return (value: any) => this.countByColumn(column, value);
-        }
-
-        return target[methodName as keyof typeof target];
-      },
-    });
-  }
-
-  public get queryBuilder(): PostgrestQueryBuilder<Schema, Relation> {
-    if (this.TABLE_NAME === '' || !this.TABLE_NAME) {
+  /**
+   * Provides a query builder for executing database operations.
+   * @throws {Error} - If `TABLE_NAME` is not defined.
+   */
+  public get queryBuilder(): PostgrestQueryBuilder<Schema, Relation, Entity> {
+    if (!this.TABLE_NAME) {
       throw new Error('Table name must be defined');
     }
 
@@ -81,15 +58,17 @@ export abstract class AbstractRepository<
       .from<string, Relation>(this.TABLE_NAME);
   }
 
-  public set pageSize(value: number) {
-    if (value <= 0) {
-      throw new Error('Page size must be greater than zero');
-    }
-
-    this.defaultPageSize = value;
+  /**
+   * Abstract factory method to enforce implementation in subclasses.
+   */
+  static getInstance() {
+    throw new Error('Method not implemented');
   }
 
-  public async all(options?: {
+  /**
+   * Retrieves all records from the table, with optional filtering and pagination.
+   */
+  public async all<E = Entity>(options?: {
     ascending?: boolean;
     nullsFirst?: boolean;
     referencedTable?: string;
@@ -97,67 +76,43 @@ export abstract class AbstractRepository<
     select?: string;
     includeDeleted?: boolean;
     queryBuilder?: (
-      builder: PostgrestFilterBuilder<
-        Schema,
-        Relation['Row'],
-        unknown,
-        unknown,
-        unknown
-      >,
-    ) => PostgrestTransformBuilder<Schema, Relation, Entity>;
-    mapData?: (
-      data: Entity,
-      index?: number,
-      array?: Entity[],
-    ) => Readonly<Entity>;
-  }): Promise<AllResponse<Entity>> {
-    const { from, to } = this.getPaginationRange(options?.page);
+      builder: PostgrestFilterBuilder<Schema, Relation['Row'], E[]>,
+    ) => PostgrestTransformBuilder<Schema, Relation, E[]>;
+    mapData?: (data: E, index?: number, array?: E[]) => Readonly<E>;
+  }): Promise<QueryBuilder<Schema, Relation, E>> {
+    let initialBuilder: PostgrestFilterBuilder<Schema, Relation['Row'], E[]> =
+      this.queryBuilder.select(options?.select ?? '*', {
+        count: 'exact',
+      });
 
-    let initialBuilder = this.queryBuilder.select(options?.select ?? '*', {
-      count: 'exact',
-    });
     if (this.hasSoftDelete && !options?.includeDeleted) {
       initialBuilder = initialBuilder.is(this.DELETED_AT, null);
     }
 
-    const builder = options?.queryBuilder
-      ? options.queryBuilder(initialBuilder).range(from, to)
-      : initialBuilder
-          .order(this.CREATED_AT, {
-            ...options,
-            ascending: options?.ascending ?? false,
-          })
-          .range(from, to);
+    const finalBuilder = options?.queryBuilder
+      ? options.queryBuilder(initialBuilder)
+      : initialBuilder;
 
-    const { data, error, count } = await builder;
-
-    if (error) {
-      throw error;
-    }
-
-    const theData: Entity[] = options?.mapData
-      ? (data as Entity[]).flatMap(options.mapData)
-      : (data as Entity[]);
-
-    return {
-      data: theData ?? [],
-      count: count ?? 0,
-      currentPage: options?.page ? Number(options.page) : 1,
-      totalPages: Math.ceil((count ?? 0) / this.defaultPageSize),
-    };
+    return new QueryBuilder<Schema, Relation, E>(finalBuilder);
   }
 
-  public async find(
+  /**
+   * Finds a record by its primary key
+   */
+  public async find<
+    E = Entity,
+    C extends string & keyof Relation['Row'] = 'id',
+  >(
     id: string,
     options?: {
       select?: string;
-      column?: string;
+      column?: C;
     },
-  ): Promise<Entity | null> {
+  ): Promise<E | null> {
     const { data, error } = await this.queryBuilder
       .select(options?.select ?? '*')
       .eq(options?.column ?? 'id', id)
-      .maybeSingle<Entity>();
+      .maybeSingle<E>();
 
     if (error) {
       throw error;
@@ -166,7 +121,10 @@ export abstract class AbstractRepository<
     return data;
   }
 
-  public async create(data: Relation['Insert']): Promise<Entity> {
+  /**
+   * Inserts a new record into the table.
+   */
+  public async create<E = Entity>(data: Relation['Insert']): Promise<E> {
     const timestamp = new Date().toISOString();
     const { data: created, error } = await this.queryBuilder
       .insert({
@@ -176,23 +134,29 @@ export abstract class AbstractRepository<
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any)
       .select()
-      .single<Entity>();
+      .single<E>();
 
     if (error) {
       throw error;
     }
 
-    return created as Entity;
+    return created;
   }
 
-  public async update(
+  /**
+   * Updates a record by its primary key.
+   */
+  public async update<
+    E = Entity,
+    C extends string & keyof Relation['Row'] = 'id',
+  >(
     id: string,
     data: Relation['Update'],
     options?: {
       select?: string;
-      column?: string;
+      column?: C;
     },
-  ): Promise<Entity> {
+  ): Promise<E> {
     const { data: updated, error } = await this.queryBuilder
       .update({
         ...data,
@@ -201,18 +165,22 @@ export abstract class AbstractRepository<
       } as any)
       .eq(options?.column ?? 'id', id)
       .select(options?.select ?? '*')
-      .single<Entity>();
+      .single<E>();
 
     if (error) {
       throw error;
     }
 
-    return updated as Entity;
+    return updated;
   }
 
-  public async delete(
+  /**
+   * Deletes a record by its primary key.
+   * Uses soft delete if `hasSoftDelete` is enabled.
+   */
+  public async delete<C extends string & keyof Relation['Row'] = 'id'>(
     id: string,
-    options?: { column?: string },
+    options?: { column?: C },
   ): Promise<boolean> {
     const timestamp = new Date().toISOString();
     const queryBuilder = () => {
@@ -236,57 +204,21 @@ export abstract class AbstractRepository<
     return true;
   }
 
-  // @todo: Create a Paginator class to handle pagination
-  protected getPaginationRange(
-    page: number = 1,
-    pageSize: number = this.defaultPageSize,
-  ): PaginationRange {
-    const limit = pageSize ? +pageSize : this.defaultPageSize;
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    return {
-      from,
-      to,
-    };
-  }
-
-  private getColumnFromMethod(methodName: string, prefix: string): string {
-    return methodName
-      .replace(prefix, '')
-      .replace(/([A-Z])/g, (_: string, p1: string, offset: number) =>
-        offset ? '_' + p1 : p1,
-      )
-      .toLowerCase();
-  }
-
-  private async findByColumn(
-    column: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+  /**
+   * Finds multiple records by a column value.
+   */
+  public async findByColumn<
+    C extends string & keyof Relation['Row'],
+    E = Entity,
+  >(
+    column: C,
+    value: NonNullable<Relation['Row'][C]>,
     options?: { select?: string },
-  ): Promise<Entity[]> {
-    const { data, error } = await this.queryBuilder
-      .select(options?.select ?? '*')
-      .eq(column, value);
-
-    if (error) {
-      throw error;
-    }
-
-    return data as Entity[];
-  }
-
-  private async findOneByColumn(
-    column: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
-    options?: { select?: string },
-  ): Promise<Entity | null> {
+  ): Promise<E[]> {
     const { data, error } = await this.queryBuilder
       .select(options?.select ?? '*')
       .eq(column, value)
-      .maybeSingle<Entity>();
+      .returns<E[]>();
 
     if (error) {
       throw error;
@@ -295,11 +227,41 @@ export abstract class AbstractRepository<
     return data;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async countByColumn(column: string, value: any): Promise<number> {
+  /**
+   * Finds one or null records by a column value.
+   */
+  public async findOneByColumn<
+    C extends string & keyof Relation['Row'],
+    E = Entity,
+  >(
+    column: C,
+    value: NonNullable<Relation['Row'][C]>,
+    options?: { select?: string },
+  ): Promise<E | null> {
+    const { data, error } = await this.queryBuilder
+      .select(options?.select ?? '*')
+      .eq(column, value)
+      .maybeSingle<E>();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  /**
+   * Counts records that match a column value.
+   */
+  public async countByColumn<C extends string & keyof Relation['Row']>(
+    column: C,
+    value: NonNullable<Relation['Row'][C]>,
+    options?: { select?: string },
+  ): Promise<number> {
     const { count, error } = await this.queryBuilder
-      .select('*', { count: 'exact', head: true })
-      .eq(column, value);
+      .select(options?.select ?? '*', { count: 'exact', head: true })
+      .eq(column, value)
+      .returns<number>();
 
     if (error) {
       throw error;
