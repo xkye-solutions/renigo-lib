@@ -1,27 +1,35 @@
-import { SupabaseClientFactory } from './supabase-client-factory';
+import {
+  SupabaseAdminClientFactory,
+  SupabaseAnonClientFactory,
+  SupabaseServerClientFactory,
+} from '@/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export class SupabaseSingleton {
-  private static instance: SupabaseClient;
+  private static serverInstance: Promise<SupabaseClient> | null = null;
+  private static anonInstance: SupabaseClient | null = null;
+  private static adminInstance: SupabaseClient | null = null;
 
-  // @deprecated: Will remove this in future release
-  static getBrowserInstance(): SupabaseClient {
-    if (!SupabaseSingleton.instance) {
-      SupabaseSingleton.instance = SupabaseClientFactory.createBrowserClient();
+  static getServerInstance(): Promise<SupabaseClient> {
+    if (!this.serverInstance) {
+      this.serverInstance = new SupabaseServerClientFactory().createClient();
     }
 
-    return SupabaseSingleton.instance;
+    return this.serverInstance;
   }
 
-  static async getServerInstance(): Promise<SupabaseClient> {
-    return await SupabaseClientFactory.createServerClient();
+  static getAnonInstance(): SupabaseClient {
+    if (!this.anonInstance) {
+      this.anonInstance = new SupabaseAnonClientFactory().createClient();
+    }
+    return this.anonInstance;
   }
 
-  static async getAnonInstance(): Promise<SupabaseClient> {
-    return await SupabaseClientFactory.createAnonClient();
-  }
+  static getAdminInstance(): SupabaseClient {
+    if (!this.adminInstance) {
+      this.adminInstance = new SupabaseAdminClientFactory().createClient();
+    }
 
-  static async getAdminInstance(): Promise<SupabaseClient> {
-    return await SupabaseClientFactory.createAdminClient();
+    return this.adminInstance;
   }
 }

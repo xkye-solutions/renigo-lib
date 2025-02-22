@@ -1,6 +1,6 @@
 {
   "name": "@xkye-solutions/renigo-lib",
-  "version": "0.1.0",
+  "version": "1.5.0",
   "description": "Renigo Library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
