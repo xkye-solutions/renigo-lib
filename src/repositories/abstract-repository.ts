@@ -1,7 +1,14 @@
 import { QueryBuilder } from '@/utils';
-import { PostgrestFilterBuilder, PostgrestQueryBuilder, PostgrestTransformBuilder } from '@supabase/postgrest-js';
+import {
+  PostgrestFilterBuilder,
+  PostgrestQueryBuilder,
+  PostgrestTransformBuilder,
+} from '@supabase/postgrest-js';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { GenericSchema, GenericTable } from '@supabase/supabase-js/src/lib/types';
+import {
+  GenericSchema,
+  GenericTable,
+} from '@supabase/supabase-js/src/lib/types';
 
 /**
  * Abstract class providing a generic repository for database operations.

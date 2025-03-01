@@ -22,4 +22,12 @@ export class Paginator<E> {
     this.perPage = perPage;
     this.totalPages = Math.ceil(total / perPage);
   }
+
+  public hasNextPage(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  public hasPreviousPage(): boolean {
+    return this.currentPage > 1;
+  }
 }

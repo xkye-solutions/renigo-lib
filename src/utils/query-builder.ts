@@ -10,7 +10,11 @@ export class QueryBuilder<
   Relation extends GenericTable,
   Entity = Relation['Row'],
 > {
-  private readonly builder: PostgrestTransformBuilder<Schema, Relation['Row'], Entity[]>;
+  private readonly builder: PostgrestTransformBuilder<
+    Schema,
+    Relation['Row'],
+    Entity[]
+  >;
 
   constructor(
     builder: PostgrestTransformBuilder<Schema, Relation['Row'], Entity[]>,
