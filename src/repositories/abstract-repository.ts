@@ -8,11 +8,11 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import {
   GenericSchema,
   GenericTable,
-} from '@supabase/supabase-js/src/lib/types';
+} from '@supabase/supabase-js/dist/module/lib/types.js';
 
 /**
  * Abstract class providing a generic repository for database operations.
- * Supports querying, inserting, updating, sof deleting, and counting records.
+ * Supports querying, inserting, updating, soft deleting, and counting records.
  */
 export abstract class AbstractRepository<
   Schema extends GenericSchema,
@@ -206,7 +206,7 @@ export abstract class AbstractRepository<
     const { error } = await queryBuilder().eq(options?.column ?? 'id', id);
 
     if (error) {
-      throw new Error(`Unable to delete: ${error.message}`, { cause: error });
+      throw new Error(`Unable to delete: ${error.message}`);
     }
 
     return true;

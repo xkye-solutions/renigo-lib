@@ -70,7 +70,7 @@ export abstract class AbstractStorageRepository {
     const { data, error } = await this.api.upload(uniqueFilename, file);
 
     if (error) {
-      throw new Error(`Upload failed: ${error.message}`, { cause: error });
+      throw new Error(`Upload failed: ${error.message}`);
     }
 
     return data;
@@ -84,7 +84,7 @@ export abstract class AbstractStorageRepository {
     const { data, error } = await this.api.download(path);
 
     if (error) {
-      throw new Error(`Download failed: ${error.message}`, { cause: error });
+      throw new Error(`Download failed: ${error.message}`);
     }
 
     return data;
@@ -98,7 +98,7 @@ export abstract class AbstractStorageRepository {
     const { data, error } = await this.api.list(path);
 
     if (error) {
-      throw new Error(`List failed: ${error.message}`, { cause: error });
+      throw new Error(`List failed: ${error.message}`);
     }
 
     return data;
@@ -112,7 +112,7 @@ export abstract class AbstractStorageRepository {
     const { error } = await this.api.remove([path]);
 
     if (error) {
-      throw new Error(`Remove failed: ${error.message}`, { cause: error });
+      throw new Error(`Remove failed: ${error.message}`);
     }
   }
 
@@ -124,7 +124,7 @@ export abstract class AbstractStorageRepository {
     const { error } = await this.api.move(from, to);
 
     if (error) {
-      throw new Error(`Move failed: ${error.message}`, { cause: error });
+      throw new Error(`Move failed: ${error.message}`);
     }
   }
 
@@ -139,9 +139,7 @@ export abstract class AbstractStorageRepository {
     const { data, error } = await this.api.createSignedUrl(path, expiresIn);
 
     if (error) {
-      throw new Error(`Sign URL creation failed: ${error.message}`, {
-        cause: error,
-      });
+      throw new Error(`Sign URL creation failed: ${error.message}`);
     }
 
     return data;

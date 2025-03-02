@@ -1,28 +1,22 @@
 {
+  "include": ["src"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "module": "CommonJS",
+    "outDir": "dist",
+    "sourceMap": true,
+    "target": "ES2015",
     "strict": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "paths": {
       "@/*": ["./src/*"]
     },
-    "target": "ES2017",
-    "declaration": true,
-    "outDir": "./dist"
-  },
-  "include": ["src/**/**/*.ts"],
-  "exclude": ["node_modules"]
+    "esModuleInterop": true,
+    "moduleResolution": "Node",
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "stripInternal": true,
+    "allowSyntheticDefaultImports": true
+  }
 }
