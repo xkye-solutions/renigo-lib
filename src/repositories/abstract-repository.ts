@@ -65,7 +65,11 @@ export abstract class AbstractRepository<
       .from<string, Relation>(this.TABLE_NAME);
   }
 
-  public static async getInstance(): Promise<typeof AbstractRepository> {
+  /**
+   * Retrieves an instance of the repository
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public static async getInstance(): Promise<AbstractRepository<any, any, any>> {
     throw new Error('Not implemented');
   }
 
