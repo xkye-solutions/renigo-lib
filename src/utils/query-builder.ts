@@ -10,17 +10,13 @@ export class QueryBuilder<
   Relation extends GenericTable,
   Entity = Relation['Row'],
 > {
-  private readonly builder: PostgrestTransformBuilder<
-    Schema,
-    Relation['Row'],
-    Entity[]
-  >;
-
   constructor(
-    builder: PostgrestTransformBuilder<Schema, Relation['Row'], Entity[]>,
-  ) {
-    this.builder = builder;
-  }
+    protected readonly builder: PostgrestTransformBuilder<
+      Schema,
+      Relation['Row'],
+      Entity[]
+    >,
+  ) {}
 
   public async get(): Promise<Entity[]> {
     const { data, error } = await this.builder;
