@@ -5,7 +5,7 @@ export class FormDataFactory {
     this.formData = formData;
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromObject(data: Record<any, any>): FormDataFactory {
+  public static fromObject(data: Record<any, any>): FormDataFactory {
     const formData = new FormData();
 
     for (const [key, value] of Object.entries(data)) {
@@ -16,7 +16,7 @@ export class FormDataFactory {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  toObject(): Record<any, any> {
+  public toObject(): Record<any, any> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fields: Record<any, any> = {};
     for (const key of Object.keys(this.formData)) {

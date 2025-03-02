@@ -14,25 +14,43 @@ export class SupabaseSingleton {
   private static anonInstance: SupabaseClient | null = null;
   private static adminInstance: SupabaseClient | null = null;
 
-  static getServerInstance(): Promise<SupabaseClient> {
+  public static getServerInstance(
+    url?: string,
+    anonKey?: string,
+  ): Promise<SupabaseClient> {
     if (!this.serverInstance) {
-      this.serverInstance = new SupabaseServerClientFactory().createClient();
+      this.serverInstance = new SupabaseServerClientFactory().createClient(
+        url,
+        anonKey,
+      );
     }
 
     return this.serverInstance;
   }
 
-  static getAnonInstance(): SupabaseClient {
+  public static getAnonInstance(
+    url?: string,
+    anonKey?: string,
+  ): SupabaseClient {
     if (!this.anonInstance) {
-      this.anonInstance = new SupabaseAnonClientFactory().createClient();
+      this.anonInstance = new SupabaseAnonClientFactory().createClient(
+        url,
+        anonKey,
+      );
     }
 
     return this.anonInstance;
   }
 
-  static getAdminInstance(): SupabaseClient {
+  public static getAdminInstance(
+    url?: string,
+    serviceRole?: string,
+  ): SupabaseClient {
     if (!this.adminInstance) {
-      this.adminInstance = new SupabaseAdminClientFactory().createClient();
+      this.adminInstance = new SupabaseAdminClientFactory().createClient(
+        url,
+        serviceRole,
+      );
     }
 
     return this.adminInstance;

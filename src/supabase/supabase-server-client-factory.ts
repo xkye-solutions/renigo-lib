@@ -5,7 +5,10 @@ import { SupabaseClientFactoryInterface } from './supabase-client-factory-interf
 export class SupabaseServerClientFactory
   implements SupabaseClientFactoryInterface
 {
-  async createClient(url?: string, anonKey?: string): Promise<SupabaseClient> {
+  public async createClient(
+    url?: string,
+    anonKey?: string,
+  ): Promise<SupabaseClient> {
     const { cookies } = await import('next/headers');
 
     const cookieStore = await cookies();
