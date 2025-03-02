@@ -5,6 +5,10 @@ import {
 } from '@/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 
+/**
+ * Singleton class for managing Supabase clients
+ * Provides static methods to get instances of the server, anon, and admin clients
+ */
 export class SupabaseSingleton {
   private static serverInstance: Promise<SupabaseClient> | null = null;
   private static anonInstance: SupabaseClient | null = null;
@@ -22,6 +26,7 @@ export class SupabaseSingleton {
     if (!this.anonInstance) {
       this.anonInstance = new SupabaseAnonClientFactory().createClient();
     }
+
     return this.anonInstance;
   }
 

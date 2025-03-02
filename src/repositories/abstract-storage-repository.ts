@@ -35,7 +35,7 @@ export abstract class AbstractStorageRepository {
   /**
    * Factory method to enforce implementation in subclasses.
    */
-  static getInstance() {
+  public static getInstance() {
     throw new Error('No implementation yet');
   }
 
@@ -71,6 +71,77 @@ export abstract class AbstractStorageRepository {
 
     if (error) {
       throw new Error(`Upload failed: ${error.message}`, { cause: error });
+    }
+
+    return data;
+  }
+
+  /**
+   * Downloads a file from the storage bucket.
+   * @throws {Error} - If the download fails.
+   */
+  public async download(path: string): Promise<Blob> {
+    const { data, error } = await this.api.download(path);
+
+    if (error) {
+      throw new Error(`Download failed: ${error.message}`, { cause: error });
+    }
+
+    return data;
+  }
+
+  /**
+   * Lists all files in the storage bucket.
+   * @throws {Error} - If the listing fails.
+   */
+  public async list(path?: string): Promise<{ name: string; id: string }[]> {
+    const { data, error } = await this.api.list(path);
+
+    if (error) {
+      throw new Error(`List failed: ${error.message}`, { cause: error });
+    }
+
+    return data;
+  }
+
+  /**
+   * Removes a file from the storage bucket.
+   * @throws {Error} - If the removal fails.
+   */
+  public async remove(path: string): Promise<void> {
+    const { error } = await this.api.remove([path]);
+
+    if (error) {
+      throw new Error(`Remove failed: ${error.message}`, { cause: error });
+    }
+  }
+
+  /**
+   * Moves/renames a file within the storage bucket.
+   * @throws {Error} - If the move fails.
+   */
+  public async move(from: string, to: string): Promise<void> {
+    const { error } = await this.api.move(from, to);
+
+    if (error) {
+      throw new Error(`Move failed: ${error.message}`, { cause: error });
+    }
+  }
+
+  /**
+   * Creates a signed URL for temporary access to a file.
+   * @throws {Error} - If URL creation fails.
+   */
+  public async createSignedUrl(
+    path: string,
+    expiresIn: number,
+  ): Promise<{ signedUrl: string }> {
+    const { data, error } = await this.api.createSignedUrl(path, expiresIn);
+
+    if (error) {
+      throw new Error(`Sign URL creation failed: ${error.message}`, {
+        cause: error,
+      });
     }
 
     return data;

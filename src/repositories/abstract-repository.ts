@@ -65,11 +65,8 @@ export abstract class AbstractRepository<
       .from<string, Relation>(this.TABLE_NAME);
   }
 
-  /**
-   * Abstract factory method to enforce implementation in subclasses.
-   */
-  static getInstance() {
-    throw new Error('Method not implemented');
+  public static async getInstance() {
+    throw new Error('Not implemented');
   }
 
   /**
@@ -110,7 +107,7 @@ export abstract class AbstractRepository<
     E = Entity,
     C extends string & keyof Relation['Row'] = 'id',
   >(
-    id: string,
+    id: Relation['Row'][C],
     options?: {
       select?: string;
       column?: C;
@@ -118,7 +115,7 @@ export abstract class AbstractRepository<
   ): Promise<E | null> {
     const { data, error } = await this.queryBuilder
       .select(options?.select ?? '*')
-      .eq(options?.column ?? 'id', id)
+      .eq(options?.column ?? ('id' as C), id as NonNullable<Relation['Row'][C]>)
       .maybeSingle<E>();
 
     if (error) {
@@ -275,5 +272,185 @@ export abstract class AbstractRepository<
     }
 
     return count ?? 0;
+  }
+
+  /**
+   * Performs an aggregation operation on a column
+   */
+  public async aggregate<T = number>(
+    operation: 'count' | 'sum' | 'avg' | 'min' | 'max',
+    column: string & keyof Relation['Row'],
+  ): Promise<T> {
+    const { data, error } = await this.queryBuilder
+      .select(`${operation}(${column})`, { count: 'exact', head: true })
+      .is(this.DELETED_AT, null);
+
+    if (error) {
+      throw error;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any)?.[operation] as T;
+  }
+
+  /**
+   * Performs a bulk insert operation
+   */
+  public async bulkCreate<E = Entity>(
+    records: Array<Partial<Relation['Row']>>,
+    options?: {
+      returning?: string;
+    },
+  ): Promise<E[]> {
+    const timestamp = new Date().toISOString();
+    const recordsWithTimestamps = records.map((record) => ({
+      ...record,
+      [this.CREATED_AT]: timestamp,
+      [this.UPDATED_AT]: timestamp,
+    }));
+
+    // Using type assertion to handle complex Supabase types
+
+    const { data, error } = await this.queryBuilder
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert(recordsWithTimestamps as any)
+      .select(options?.returning ?? '*');
+
+    if (error) {
+      throw error;
+    }
+
+    return data as E[];
+  }
+
+  /**
+   * Performs a bulk update operation using upsert
+   */
+  public async bulkUpdate<E = Entity>(
+    records: Array<Partial<Relation['Row']> & { id: string }>,
+    options?: {
+      returning?: string;
+      idColumn?: string;
+    },
+  ): Promise<E[]> {
+    const timestamp = new Date().toISOString();
+    const idColumn = options?.idColumn ?? 'id';
+
+    const recordsWithTimestamps = records.map((record) => ({
+      ...record,
+      [this.UPDATED_AT]: timestamp,
+    }));
+
+    // Using type assertion to handle complex Supabase types
+
+    const { data, error } = await this.queryBuilder
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .upsert(recordsWithTimestamps as any, {
+        onConflict: idColumn,
+        ignoreDuplicates: false,
+      })
+      .select(options?.returning ?? '*');
+
+    if (error) {
+      throw error;
+    }
+
+    return data as E[];
+  }
+
+  /**
+   * Performs a transaction with multiple operations
+   */
+  public async transaction<T>(
+    callback: (repo: this) => Promise<T>,
+  ): Promise<T> {
+    return await callback(this);
+  }
+
+  /**
+   * Finds records by multiple conditions
+   */
+  public async findWhere<E = Entity>(
+    conditions: Partial<Relation['Row']>,
+    options?: {
+      select?: string;
+      orderBy?: string & keyof Relation['Row'];
+      orderDirection?: 'asc' | 'desc';
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<E[]> {
+    let query = this.queryBuilder
+      .select(options?.select ?? '*')
+      .is(this.DELETED_AT, null);
+
+    // Apply all conditions
+    Object.entries(conditions).forEach(([column, value]) => {
+      if (value === null) {
+        query = query.is(column, null);
+      }
+      if (value !== undefined) {
+        query = query.eq(column, value);
+      }
+    });
+
+    // Apply ordering
+    if (options?.orderBy) {
+      query = query.order(options.orderBy, {
+        ascending: options.orderDirection !== 'desc',
+      });
+    }
+
+    // Apply pagination
+    if (options?.limit) {
+      query = query.limit(options.limit);
+    }
+
+    if (options?.offset) {
+      query = query.range(
+        options.offset,
+        options.offset + (options.limit ?? 15) - 1,
+      );
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return data as E[];
+  }
+
+  /**
+   * Finds a single record by multiple conditions
+   */
+  public async findOneWhere<E = Entity>(
+    conditions: Partial<Relation['Row']>,
+    options?: {
+      select?: string;
+    },
+  ): Promise<E | null> {
+    let query = this.queryBuilder
+      .select(options?.select ?? '*')
+      .is(this.DELETED_AT, null);
+
+    // Apply all conditions
+    Object.entries(conditions).forEach(([column, value]) => {
+      if (value === null) {
+        query = query.is(column, null);
+      }
+      if (value !== undefined) {
+        query = query.eq(column, value);
+      }
+    });
+
+    const { data, error } = await query.maybeSingle<E>();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
   }
 }
