@@ -12,7 +12,7 @@ import {
 
 /**
  * Abstract class providing a generic repository for database operations.
- * Supports querying, inserting, updating, sof deleting, and counting records.
+ * Supports querying, inserting, updating, soft deleting, and counting records.
  */
 export abstract class AbstractRepository<
   Schema extends GenericSchema,
@@ -68,8 +68,10 @@ export abstract class AbstractRepository<
   /**
    * Retrieves an instance of the repository
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public static async getInstance(): Promise<AbstractRepository<any, any, any>> {
+  public static async getInstance(): Promise<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    AbstractRepository<any, any, any>
+  > {
     throw new Error('Not implemented');
   }
 
@@ -206,7 +208,7 @@ export abstract class AbstractRepository<
     const { error } = await queryBuilder().eq(options?.column ?? 'id', id);
 
     if (error) {
-      throw new Error(`Unable to delete: ${error.message}`, { cause: error });
+      throw new Error(`Unable to delete: ${error.message}`);
     }
 
     return true;
