@@ -4,10 +4,10 @@ import { SupabaseClientFactoryInterface } from './supabase-client-factory-interf
 export class SupabaseAnonClientFactory
   implements SupabaseClientFactoryInterface
 {
-  createClient(): SupabaseClient {
+  createClient(url?: string, anonKey?: string): SupabaseClient {
     return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+      url ?? (process.env.NEXT_PUBLIC_SUPABASE_URL as string),
+      anonKey ?? (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string),
     );
   }
 }

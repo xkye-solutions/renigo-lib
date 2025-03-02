@@ -5,14 +5,14 @@ import { SupabaseClientFactoryInterface } from './supabase-client-factory-interf
 export class SupabaseServerClientFactory
   implements SupabaseClientFactoryInterface
 {
-  async createClient(): Promise<SupabaseClient> {
+  async createClient(url?: string, anonKey?: string): Promise<SupabaseClient> {
     const { cookies } = await import('next/headers');
 
     const cookieStore = await cookies();
 
     return createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+      url ?? (process.env.NEXT_PUBLIC_SUPABASE_URL as string),
+      anonKey ?? (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string),
       {
         cookies: {
           getAll() {
