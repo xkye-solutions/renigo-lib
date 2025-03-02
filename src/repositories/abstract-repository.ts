@@ -68,8 +68,8 @@ export abstract class AbstractRepository<
   /**
    * Retrieves an instance of the repository
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public static async getInstance(): Promise<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     AbstractRepository<any, any, any>
   > {
     throw new Error('Not implemented');

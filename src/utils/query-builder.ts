@@ -3,7 +3,7 @@ import { PostgrestTransformBuilder } from '@supabase/postgrest-js';
 import {
   GenericSchema,
   GenericTable,
-} from '@supabase/supabase-js/dist/module/lib/types.js';
+} from '@supabase/supabase-js/src/lib/types';
 
 export class QueryBuilder<
   Schema extends GenericSchema,
