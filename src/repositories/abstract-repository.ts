@@ -8,7 +8,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import {
   GenericSchema,
   GenericTable,
-} from '@supabase/supabase-js/dist/module/lib/types.js';
+} from '@supabase/supabase-js/src/lib/types';
 
 /**
  * Abstract class providing a generic repository for database operations.
@@ -69,7 +69,9 @@ export abstract class AbstractRepository<
    * Retrieves an instance of the repository
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public static async getInstance(): Promise<AbstractRepository<any, any, any>> {
+  public static async getInstance(): Promise<
+    AbstractRepository<any, any, any>
+  > {
     throw new Error('Not implemented');
   }
 
