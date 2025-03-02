@@ -65,7 +65,7 @@ export abstract class AbstractRepository<
       .from<string, Relation>(this.TABLE_NAME);
   }
 
-  public static async getInstance() {
+  public static async getInstance(): Promise<typeof AbstractRepository> {
     throw new Error('Not implemented');
   }
 
