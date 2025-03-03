@@ -9,6 +9,7 @@ import {
   GenericSchema,
   GenericTable,
 } from '@supabase/supabase-js/src/lib/types';
+import { Paginator } from '@/dto';
 
 /**
  * Abstract class providing a generic repository for database operations.
@@ -76,19 +77,49 @@ export abstract class AbstractRepository<
   }
 
   /**
-   * Retrieves all records from the table, with optional filtering and pagination.
+   * Retrieves all records from the table, with optional filtering.
    */
   public async all<E = Entity>(options?: {
-    ascending?: boolean;
-    nullsFirst?: boolean;
-    referencedTable?: string;
+    select?: string;
+    includeDeleted?: boolean;
+  }): Promise<E[]> {
+    const query = await this.createQueryBuilder<E>({
+      select: options?.select,
+      includeDeleted: options?.includeDeleted,
+    });
+
+    return await query.get();
+  }
+
+  /**
+   * Retrieves all records from the table, with optional filtering and pagination.
+   */
+  public async paginate<E = Entity>(options?: {
+    select?: string;
+    includeDeleted?: boolean;
     page?: number;
+    perPage?: number;
+  }): Promise<Paginator<E>> {
+    const query = await this.createQueryBuilder<E>({
+      select: options?.select,
+      includeDeleted: options?.includeDeleted,
+    });
+
+    return await query.paginate<E>({
+      page: options?.page,
+      perPage: options?.perPage,
+    });
+  }
+
+  /**
+   * Creates a query builder for executing database operations.
+   */
+  public async createQueryBuilder<E = Entity>(options?: {
     select?: string;
     includeDeleted?: boolean;
     queryBuilder?: (
       builder: PostgrestFilterBuilder<Schema, Relation['Row'], E[]>,
     ) => PostgrestTransformBuilder<Schema, Relation, E[]>;
-    mapData?: (data: E, index?: number, array?: E[]) => Readonly<E>;
   }): Promise<QueryBuilder<Schema, Relation, E>> {
     let initialBuilder: PostgrestFilterBuilder<Schema, Relation['Row'], E[]> =
       this.queryBuilder.select(options?.select ?? '*', {
