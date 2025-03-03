@@ -31,7 +31,7 @@ export class QueryBuilder<
   public async paginate<E = Entity>(options?: {
     page?: number;
     perPage?: number;
-  }) {
+  }): Promise<Paginator<E>> {
     const { from, to } = this.getPaginationRange(
       options?.page,
       options?.perPage,
